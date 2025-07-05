@@ -1,14 +1,17 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! # Recorder Core Library
+//!
+//! The `recorder-core` library provides functionality for recording audio using various configurations.
+//! It supports recording from multiple devices, with or without resampling, and is designed to be used
+//! in a singleton pattern to ensure only one instance of the recorder is active at any time.
+//!
+//! ## Usage
+//!
+//! To use the recorder, create an instance of the `Recorder` struct and call its `start` method to begin recording.
+//! This will start a background thread that will record audio from the default input device. the
+//! start function will return a receiver which acts as a stream to receive the audio data in
+//! `TargetFormat`.
+//! Call the `stop` method to stop recording.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+mod recorder;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use recorder::Recorder;
