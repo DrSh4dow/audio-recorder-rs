@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Daniel Moretti <daniel.morettiv@gmail.com>"]
 description = ""
-publish = true
+# publish = true
 repository = "https://github.com/DrSh4dow/audio-recorder-rs"
 homepage = "https://github.com/DrSh4dow/audio-recorder-rs"
 license = "MIT"
@@ -12,3 +12,9 @@ readme = "README.md"
 keywords = ["audio", "recorder", "stream", "audio-stream", "lib"]
 
 [dependencies]
+cpal = "0.16.0"
+tracing = "0.1.41"
+
+[dev-dependencies]
+hound = "3.5.1"
+tracing-test = "0.2.5"
