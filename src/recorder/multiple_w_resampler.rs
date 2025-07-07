@@ -1,22 +1,26 @@
 use std::{
+    sync::atomic::Ordering,
     thread::{self, sleep},
     time::Duration,
 };
 
 use cpal::{
-    traits::{DeviceTrait, StreamTrait},
     Sample,
+    traits::{DeviceTrait, StreamTrait},
 };
 use crossbeam_channel::Receiver;
 use ringbuf::{
-    traits::{Consumer, Observer, Producer, Split},
     HeapRb,
+    traits::{Consumer, Observer, Producer, Split},
 };
 use rubato::{FftFixedIn, Resampler};
 
-use crate::recorder::common::{TargetFormat, RESAMPLER_CHUNK_SIZE, RESAMPLER_SLEEP_DELAY};
+use super::{
+    constants::{CustomSample, RESAMPLER_CHUNK_SIZE, RESAMPLER_SLEEP_DELAY, TargetFormat},
+    errors::AudioRecorderError,
+};
 
-use super::{common::CustomSample, Recorder};
+use super::Recorder;
 
 impl Recorder {
     pub fn with_input_resampler<T, U>(
@@ -25,7 +29,7 @@ impl Recorder {
         output_device: cpal::Device,
         target_rate: usize,
         origin_rate: usize,
-    ) -> Result<Receiver<Vec<TargetFormat>>, String>
+    ) -> Result<Receiver<Vec<TargetFormat>>, AudioRecorderError>
     where
         T: CustomSample + 'static,
         U: CustomSample + 'static,
@@ -35,13 +39,19 @@ impl Recorder {
         let input_config = match input_device.default_input_config() {
             Ok(c) => c,
             Err(e) => {
-                return Err(format!("Failed to get input config: {}", e));
+                tracing::error!("Failed to get input config: {}", e);
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get input config",
+                ));
             }
         };
         let output_config = match output_device.default_output_config() {
             Ok(c) => c,
             Err(e) => {
-                return Err(format!("Failed to get output config: {}", e));
+                tracing::error!("Failed to get output config: {}", e);
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get output config",
+                ));
             }
         };
 
@@ -65,7 +75,7 @@ impl Recorder {
         tracing::debug!("Begin recording...");
 
         // Run the input stream on a separate thread.
-        let recording_signal = self.recording_signal_mutex.clone();
+        let recording_signal = self.recording_signal.clone();
 
         let output_channels = output_config.channels();
         let input_channels = input_config.channels();
@@ -133,7 +143,7 @@ impl Recorder {
                     match FftFixedIn::<TargetFormat>::new(origin_rate, target_rate, 1024, 2, 1) {
                         Ok(r) => r,
                         Err(e) => {
-                            return Err(format!("Failed to create resampler: {}", e));
+                            return Err(format!("Failed to create resampler: {e}"));
                         }
                     };
 
@@ -141,7 +151,7 @@ impl Recorder {
                 let mut next_input_frames = resampler.input_frames_next();
 
                 loop {
-                    if !*recording_signal_2.lock().unwrap() {
+                    if !recording_signal_2.load(Ordering::SeqCst) {
                         break;
                     }
 
@@ -182,7 +192,7 @@ impl Recorder {
                 return;
             };
 
-            while *recording_signal.lock().unwrap() {
+            while recording_signal.load(Ordering::SeqCst) {
                 if consumer_output.occupied_len() >= target_rate
                     || consumer_input.occupied_len() >= target_rate
                 {
@@ -230,7 +240,7 @@ impl Recorder {
         output_device: cpal::Device,
         target_rate: usize,
         origin_rate: usize,
-    ) -> Result<Receiver<Vec<TargetFormat>>, String>
+    ) -> Result<Receiver<Vec<TargetFormat>>, AudioRecorderError>
     where
         T: CustomSample + 'static,
         U: CustomSample + 'static,
@@ -240,13 +250,19 @@ impl Recorder {
         let input_config = match input_device.default_input_config() {
             Ok(c) => c,
             Err(e) => {
-                return Err(format!("Failed to get input config: {}", e));
+                tracing::error!("Failed to get input config: {}", e);
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get input config",
+                ));
             }
         };
         let output_config = match output_device.default_output_config() {
             Ok(c) => c,
             Err(e) => {
-                return Err(format!("Failed to get output config: {}", e));
+                tracing::error!("Failed to get output config: {}", e);
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get output config",
+                ));
             }
         };
 
@@ -269,7 +285,7 @@ impl Recorder {
         tracing::debug!("Begin recording...");
 
         // Run the input stream on a separate thread.
-        let recording_signal = self.recording_signal_mutex.clone();
+        let recording_signal = self.recording_signal.clone();
 
         let output_channels = output_config.channels();
         let input_channels = input_config.channels();
@@ -346,7 +362,7 @@ impl Recorder {
                 let mut next_input_frames = resampler.input_frames_next();
 
                 loop {
-                    if !*recording_signal_2.lock().unwrap() {
+                    if !recording_signal_2.load(Ordering::SeqCst) {
                         break;
                     }
 
@@ -385,7 +401,7 @@ impl Recorder {
                 return;
             };
 
-            while *recording_signal.lock().unwrap() {
+            while recording_signal.load(Ordering::SeqCst) {
                 if consumer_output.occupied_len() >= target_rate
                     || consumer_input.occupied_len() >= target_rate
                 {

@@ -1,4 +1,4 @@
-use recorder_core::Recorder;
+use audio_recorder_rs::Recorder;
 use tracing_test::traced_test;
 
 #[test]
@@ -13,7 +13,7 @@ fn record_multiple_devices() {
     let receiver = match recorder.start(false) {
         Ok(receiver) => receiver,
         Err(e) => {
-            panic!("Failed to start recorder: {}", e);
+            panic!("Failed to start recorder: {e}");
         }
     };
     tracing::info!("Recorder started");
@@ -53,10 +53,7 @@ fn record_multiple_devices() {
         }
     }
     tracing::info!("Finished recording");
-    if let Err(e) = recorder.stop() {
-        tracing::error!("Failed to stop recorder: {}", e);
-        panic!("Failed to stop recorder: {}", e);
-    };
+    recorder.stop();
 
     // assert output.wav exists
     assert!(

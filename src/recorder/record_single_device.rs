@@ -9,7 +9,10 @@ use cpal::{
 };
 use crossbeam_channel::Receiver;
 
-use super::constants::{CLOCK_DELAY, TargetFormat};
+use super::{
+    constants::{CLOCK_DELAY, TargetFormat},
+    errors::AudioRecorderError,
+};
 
 use super::Recorder;
 
@@ -68,7 +71,7 @@ impl Recorder {
     pub fn record_single_device(
         &mut self,
         device: cpal::Device,
-    ) -> Result<Receiver<Vec<TargetFormat>>, String> {
+    ) -> Result<Receiver<Vec<TargetFormat>>, AudioRecorderError> {
         tracing::info!("Record single device started");
 
         tracing::debug!(
@@ -80,19 +83,21 @@ impl Recorder {
             Ok(config) => config,
             Err(error) => {
                 tracing::error!("Failed to get default input config: {}", error);
-                return Err("Failed to get default input config".to_string());
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get default input config",
+                ));
             }
         };
 
         tracing::debug!("Setting up the recorder");
-        self.target_rate = Some(config.sample_rate().0);
+        self.target_sample_rate = Some(config.sample_rate().0);
         self.channels = Some(config.channels());
         self.sample_size = Some(config.sample_format().sample_size() as u32);
         tracing::debug!("Config: {:?}", self);
 
         // Run the input stream on a separate thread.
         tracing::debug!("Clone recording signal mutex");
-        let recording_signal = self.recording_signal_mutex.clone();
+        let recording_signal = self.recording_signal.clone();
 
         // A signal to pass on the stream
         tracing::debug!("Create channel for passing data");
@@ -100,7 +105,7 @@ impl Recorder {
 
         tracing::debug!("Begin recording...");
         thread::spawn(move || {
-            let stream = build_input_stream_for!(
+            let stream = match build_input_stream_for!(
                 device,
                 config,
                 config.sample_format(),
@@ -115,15 +120,23 @@ impl Recorder {
                 U64 => u64,
                 F32 => f32,
                 F64 => f64
-            ); // `?` if you’re inside a Result-returning function
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    tracing::error!("Failed to build input stream: {}", e);
+                    recording_signal.store(false, std::sync::atomic::Ordering::SeqCst);
+                    return Err("Failed to build input stream".to_string());
+                }
+            }; // `?` if you’re inside a Result-returning function
 
             tracing::info!("Stream started");
             if let Err(e) = stream.play() {
                 tracing::error!("Failed to play stream: {}", e);
+                recording_signal.store(false, std::sync::atomic::Ordering::SeqCst);
                 return Err("Failed to play stream".to_string());
             };
 
-            while *recording_signal.lock().unwrap() {
+            while recording_signal.load(std::sync::atomic::Ordering::SeqCst) {
                 thread::sleep(Duration::from_millis(CLOCK_DELAY as _));
             }
 

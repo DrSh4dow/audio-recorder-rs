@@ -38,21 +38,13 @@ impl Recorder {
     pub fn get_is_recording(&self) -> bool {
         tracing::debug!("Checking if the recorder is alive");
 
-        let recording_signal = match self.recording_signal_mutex.try_lock() {
-            Ok(recording_signal) => recording_signal,
-            Err(error) => {
-                tracing::info!("Failed to lock the recording signal mutex: {}", error);
-                tracing::info!("Returning true, as the recording signal is being used");
-                return true;
-            }
-        };
-
-        *recording_signal
+        self.recording_signal
+            .load(std::sync::atomic::Ordering::Relaxed)
     }
 
     #[tracing::instrument]
     pub fn get_config(&self) -> Result<Config, String> {
-        let sample_rate = match self.target_rate {
+        let sample_rate = match self.target_sample_rate {
             Some(rate) => rate,
             None => {
                 return Err("Sample rate not set".to_string());
@@ -78,51 +70,6 @@ impl Recorder {
             channels,
             sample_size,
         })
-    }
-
-    /// Prepare the recorder devices
-    /// and create the virtual input devices for recording
-    #[tracing::instrument]
-    pub fn prepare(&mut self) -> Result<(), String> {
-        tracing::debug!("Preparing recorder");
-
-        let mut recording_signal = match self.recording_signal_mutex.lock() {
-            Ok(recording_signal) => recording_signal,
-            Err(error) => {
-                tracing::error!("Failed to lock the recording signal mutex: {}", error);
-                return Err("Failed to lock the recording signal mutex".to_string());
-            }
-        };
-
-        if *recording_signal {
-            return Err("Recording already in progress".to_string());
-        }
-
-        *recording_signal = true;
-        self.sample_size = None;
-        self.channels = None;
-        self.target_rate = None;
-
-        #[cfg(target_os = "macos")]
-        {
-            tracing::info!("Saving the original default device");
-            let default_device = match macos_utils::get_current_default_device() {
-                Ok(device) => device,
-                Err(e) => {
-                    tracing::error!("Error getting the default device: {}", e);
-                    return Ok(());
-                }
-            };
-            self.original_output_device_name = Some(default_device);
-            tracing::info!("Setting the default device to the multi-output device");
-            if let Err(e) = macos_utils::switch_device("mappa-recorder-device") {
-                tracing::error!("Error switching the default device: {}", e);
-            };
-        }
-
-        tracing::debug!("Recorder prepared");
-
-        Ok(())
     }
 
     /// Converts multi-channel audio data to mono by averaging the channels.

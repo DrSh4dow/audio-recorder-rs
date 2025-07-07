@@ -7,15 +7,14 @@ use cpal::traits::{DeviceTrait, StreamTrait};
 use crossbeam_channel::Receiver;
 use dasp_sample::Sample;
 use ringbuf::{
-    traits::{Consumer, Producer, Split},
     HeapRb,
+    traits::{Consumer, Producer, Split},
 };
 
-use crate::recorder::common::CLOCK_DELAY;
-
 use super::{
-    common::{CustomSample, TargetFormat},
     Recorder,
+    constants::{CLOCK_DELAY, CustomSample, TargetFormat},
+    errors::AudioRecorderError,
 };
 
 impl Recorder {
@@ -23,7 +22,7 @@ impl Recorder {
         &self,
         input_device: cpal::Device,
         output_device: cpal::Device,
-    ) -> Result<Receiver<Vec<TargetFormat>>, String>
+    ) -> Result<Receiver<Vec<TargetFormat>>, AudioRecorderError>
     where
         T: CustomSample + 'static,
         U: CustomSample + 'static,
@@ -34,13 +33,19 @@ impl Recorder {
         let input_config = match input_device.default_input_config() {
             Ok(c) => c,
             Err(e) => {
-                return Err(format!("Failed to get input config: {}", e));
+                tracing::error!("Failed to get input config: {}", e);
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get input config",
+                ));
             }
         };
         let output_config = match output_device.default_output_config() {
             Ok(c) => c,
             Err(e) => {
-                return Err(format!("Failed to get output config: {}", e));
+                tracing::error!("Failed to get output config: {}", e);
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get output config",
+                ));
             }
         };
 
@@ -77,7 +82,7 @@ impl Recorder {
 
         // A flag to indicate that recording is in progress.
         tracing::debug!("Clone recording signal mutex...");
-        let recording_signal = self.recording_signal_mutex.clone();
+        let recording_signal = self.recording_signal.clone();
 
         let output_channels = output_config.channels();
         let input_channels = input_config.channels();
@@ -157,7 +162,7 @@ impl Recorder {
                 return;
             };
 
-            while *record_signal_clone_1.lock().unwrap() {
+            while record_signal_clone_1.load(std::sync::atomic::Ordering::SeqCst) {
                 sleep(Duration::from_millis(CLOCK_DELAY as _));
             }
 

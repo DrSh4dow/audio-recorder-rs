@@ -8,7 +8,7 @@ pub fn get_default_input_device() -> Result<Device, AudioRecorderError> {
         Some(d) => d,
         None => {
             tracing::error!("Failed to get default input device");
-            return Err(AudioRecorderError::FailedToGetDevice(
+            return Err(AudioRecorderError::DeviceError(
                 "No default input device found",
             ));
         }
@@ -37,7 +37,7 @@ pub fn get_default_output_device() -> Result<Device, AudioRecorderError> {
             Some(d) => d,
             None => {
                 tracing::error!("Failed to get default output device");
-                return Err(AudioRecorderError::FailedToGetDevice(
+                return Err(AudioRecorderError::DeviceError(
                     "No default output device found",
                 ));
             }
@@ -62,7 +62,7 @@ pub fn get_default_output_device() -> Result<Device, AudioRecorderError> {
             Some(d) => d,
             None => {
                 tracing::error!("Failed to get default output device");
-                return Err(AudioRecorderError::FailedToGetDevice(
+                return Err(AudioRecorderError::DeviceError(
                     "No default output device found",
                 ));
             }
@@ -80,7 +80,7 @@ pub fn get_default_output_device() -> Result<Device, AudioRecorderError> {
             Some(d) => d,
             None => {
                 tracing::error!("Failed to get default output device");
-                return Err(AudioRecorderError::FailedToGetDevice(
+                return Err(AudioRecorderError::DeviceError(
                     "No default output device found",
                 ));
             }
@@ -96,7 +96,7 @@ pub fn get_default_output_device() -> Result<Device, AudioRecorderError> {
             Some(d) => d,
             None => {
                 tracing::error!("Failed to get default output device");
-                return Err(AudioRecorderError::FailedToGetDevice(
+                return Err(AudioRecorderError::DeviceError(
                     "No default output device found",
                 ));
             }

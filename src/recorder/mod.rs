@@ -1,11 +1,16 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 use constants::TargetFormat;
 use crossbeam_channel::Receiver;
 use errors::AudioRecorderError;
 use get_default_device::get_default_input_device;
 
+/// Module for handling constants used in the audio recorder.
 mod constants;
+
 /// Module for error handling in the audio recorder.
 mod errors;
 /// Module for handling the default device i/o selection.
@@ -30,7 +35,7 @@ mod record_single_device;
 #[derive(Debug)]
 pub struct Recorder {
     /// recording signal, safe to share across threads
-    recording_signal_mutex: AtomicBool,
+    recording_signal: Arc<AtomicBool>,
     /// The target sample rate for recording.
     target_sample_rate: Option<u32>,
     /// The number of channels for recording.
@@ -43,7 +48,7 @@ impl Recorder {
     /// Creates a new instance of the Recorder.
     pub fn new() -> Self {
         Recorder {
-            recording_signal_mutex: AtomicBool::new(false),
+            recording_signal: Arc::new(AtomicBool::new(false)),
             target_sample_rate: None,
             channels: None,
             sample_size: None,
@@ -55,13 +60,13 @@ impl Recorder {
         tracing::info!("Stopping the recorder");
 
         tracing::debug!("Checking if recording is in progress");
-        if !self.recording_signal_mutex.load(Ordering::SeqCst) {
+        if !self.recording_signal.load(Ordering::SeqCst) {
             tracing::info!("Recording is not in progress");
             return;
         }
 
         tracing::debug!("Resetting recording signal");
-        self.recording_signal_mutex.store(false, Ordering::SeqCst);
+        self.recording_signal.store(false, Ordering::SeqCst);
         tracing::info!("Recorder stopped successfully");
     }
 
@@ -73,13 +78,13 @@ impl Recorder {
         tracing::info!("Starting audio recording");
 
         tracing::debug!("Checking if recording is already in progress");
-        if self.recording_signal_mutex.load(Ordering::SeqCst) {
+        if self.recording_signal.load(Ordering::SeqCst) {
             tracing::warn!("Recording is already in progress");
             return Err(AudioRecorderError::RecordingInProgress);
         }
 
         tracing::debug!("Initializing flag for recording");
-        self.recording_signal_mutex.store(true, Ordering::SeqCst);
+        self.recording_signal.store(true, Ordering::SeqCst);
 
         let input_device = match get_default_input_device() {
             Ok(device) => device,

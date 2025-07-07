@@ -2,8 +2,9 @@ use cpal::traits::DeviceTrait;
 use crossbeam_channel::Receiver;
 
 use super::{
-    common::{CustomSample, ResampleTargetStream, TargetFormat},
     Recorder,
+    constants::{CustomSample, ResampleTargetStream, TargetFormat},
+    errors::AudioRecorderError,
 };
 
 impl Recorder {
@@ -11,7 +12,7 @@ impl Recorder {
         &mut self,
         input_device: cpal::Device,
         output_device: cpal::Device,
-    ) -> Result<Receiver<Vec<TargetFormat>>, String>
+    ) -> Result<Receiver<Vec<TargetFormat>>, AudioRecorderError>
     where
         T: CustomSample + 'static,
         U: CustomSample + 'static,
@@ -23,13 +24,19 @@ impl Recorder {
         let input_config = match input_device.default_input_config() {
             Ok(c) => c,
             Err(e) => {
-                return Err(format!("Failed to get input config: {}", e));
+                tracing::error!("Failed to get input config: {}", e);
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get input config",
+                ));
             }
         };
         let output_config = match output_device.default_output_config() {
             Ok(c) => c,
             Err(e) => {
-                return Err(format!("Failed to get output config: {}", e));
+                tracing::error!("Failed to get output config: {}", e);
+                return Err(AudioRecorderError::DeviceError(
+                    "Failed to get output config",
+                ));
             }
         };
 
@@ -58,7 +65,7 @@ impl Recorder {
             };
 
         tracing::debug!("Setting up the recorder");
-        self.target_rate = Some(target_rate as u32);
+        self.target_sample_rate = Some(target_rate as u32);
         self.channels = Some(2);
         self.sample_size = Some(input_config.sample_format().sample_size() as u32);
 
