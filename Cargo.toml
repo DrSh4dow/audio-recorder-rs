@@ -13,6 +13,9 @@ keywords = ["audio", "recorder", "stream", "audio-stream", "lib"]
 
 [dependencies]
 cpal = { git = "https://github.com/Kree0/cpal.git", branch = "master" }
+crossbeam-channel = "0.5.15"
+num-traits = "0.2.19"
+rubato = "0.16.2"
 tracing = "0.1.41"
 
 [dev-dependencies]
