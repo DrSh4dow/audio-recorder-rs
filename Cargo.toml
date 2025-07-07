@@ -12,7 +12,7 @@ readme = "README.md"
 keywords = ["audio", "recorder", "stream", "audio-stream", "lib"]
 
 [dependencies]
-cpal = "0.16.0"
+cpal = { git = "https://github.com/Kree0/cpal.git", branch = "master" }
 tracing = "0.1.41"
 
 [dev-dependencies]

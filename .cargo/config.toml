@@ -1,0 +1,7 @@
+# Uncomment the following to test for macos
+# [build]
+# target = "x86_64-apple-darwin"
+#
+# Uncomment the following to test for windows
+# [build]
+# target = "x86_64-pc-windows-msvc"
