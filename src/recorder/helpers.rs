@@ -3,9 +3,6 @@ use std::iter::Sum;
 use cpal::StreamError;
 use num_traits::{FromPrimitive, Num};
 
-#[cfg(target_os = "macos")]
-use crate::recorder::macos_utils;
-
 use super::Recorder;
 
 pub struct Config {
