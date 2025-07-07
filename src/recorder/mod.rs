@@ -85,6 +85,9 @@ impl Recorder {
 
         tracing::debug!("Initializing flag for recording");
         self.recording_signal.store(true, Ordering::SeqCst);
+        self.target_sample_rate = None;
+        self.channels = None;
+        self.sample_size = None;
 
         let input_device = match get_default_input_device() {
             Ok(device) => device,
