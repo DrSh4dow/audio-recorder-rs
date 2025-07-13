@@ -225,7 +225,7 @@ impl Recorder {
             if let Err(e) = output_stream.pause() {
                 tracing::error!("Failed to pause output stream: {}", e);
             };
-            tracing::debug!("Droping stream");
+            tracing::debug!("Dropping stream");
             drop(input_stream);
             drop(output_stream);
             tracing::info!("Recording stopped");
@@ -434,7 +434,7 @@ impl Recorder {
             if let Err(e) = output_stream.pause() {
                 tracing::error!("Failed to pause output stream: {}", e);
             };
-            tracing::debug!("Droping stream");
+            tracing::debug!("Dropping stream");
             drop(input_stream);
             drop(output_stream);
             tracing::info!("Recording stopped");

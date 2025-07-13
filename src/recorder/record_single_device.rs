@@ -140,7 +140,7 @@ impl Recorder {
                 thread::sleep(Duration::from_millis(CLOCK_DELAY as _));
             }
 
-            tracing::debug!("Droping stream");
+            tracing::debug!("Dropping stream");
             drop(stream);
 
             tracing::info!("Recording stopped");

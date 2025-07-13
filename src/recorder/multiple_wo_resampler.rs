@@ -166,7 +166,7 @@ impl Recorder {
                 sleep(Duration::from_millis(CLOCK_DELAY as _));
             }
 
-            tracing::debug!("Droping streams");
+            tracing::debug!("Dropping streams");
 
             if let Err(e) = input_stream.pause() {
                 tracing::error!("Failed to pause input stream: {}", e);
