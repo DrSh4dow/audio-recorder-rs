@@ -33,6 +33,7 @@ pub fn get_default_output_device() -> Result<Device, AudioRecorderError> {
         tracing::warn!(
             "Falling back to default host for audio device selection, this usually will not work for system audio capture on macOS"
         );
+        let host = cpal::default_host();
         let device = match host.default_output_device() {
             Some(d) => d,
             None => {
