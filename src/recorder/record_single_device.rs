@@ -127,7 +127,7 @@ impl Recorder {
                     recording_signal.store(false, std::sync::atomic::Ordering::SeqCst);
                     return Err("Failed to build input stream".to_string());
                 }
-            }; // `?` if you’re inside a Result-returning function
+            };
 
             tracing::info!("Stream started");
             if let Err(e) = stream.play() {
