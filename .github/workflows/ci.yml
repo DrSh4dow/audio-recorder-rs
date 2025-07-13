@@ -50,8 +50,7 @@ jobs:
           components: clippy
 
       - name: "Run clippy"
-        run: |
-          cargo clippy_cli
+        run: cargo clippy --all
 
   build_and_test_linux:
     name: Build and Test (Linux)
