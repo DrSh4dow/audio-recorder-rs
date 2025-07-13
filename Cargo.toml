@@ -12,7 +12,7 @@ readme = "README.md"
 keywords = ["audio", "recorder", "stream", "audio-stream", "lib"]
 
 [dependencies]
-cpal = { git = "https://github.com/Kree0/cpal.git", branch = "master" }
+cpal = { git = "https://github.com/Kree0/cpal.git", rev = "11450c5" }
 crossbeam-channel = "0.5.15"
 dasp_sample = "0.11.0"
 num-traits = "0.2.19"
