@@ -128,7 +128,7 @@ impl Recorder {
 
         // Ensure that the length of stereo_data is a multiple of the number of channels
         assert!(
-            stereo_data.len() % channels == 0,
+            stereo_data.len().is_multiple_of(channels),
             "Data length must be a multiple of the number of channels"
         );
 
