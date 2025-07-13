@@ -63,3 +63,48 @@ jobs:
 
       - name: "Run clippy"
         run: cargo clippy --all
+
+  build_and_test_linux:
+    name: Build check (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install dependencies (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: "Build"
+        run: cargo build
+
+  build_windows:
+    name: Build check (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Prepare symlink configuration
+        run: git config --global core.symlinks true
+
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: taiki-e/install-action@nextest
+      - name: "Build"
+        run: cargo build
+
+  build_macos:
+    name: Build check (MacOS)
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Prepare symlink configuration
+        run: git config --global core.symlinks true
+
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: taiki-e/install-action@nextest
+      - name: "Build"
+        run: cargo build
