@@ -1,3 +1,5 @@
+name: CI
+
 on:
   push:
     branches:
@@ -6,7 +8,9 @@ on:
     branches:
       - "**"
 
-name: CI
+env:
+  CARGO_TERM_COLOR: always
+
 
 jobs:
   fmt:
@@ -29,6 +33,10 @@ jobs:
     env:
       RUSTDOCFLAGS: "-Dwarnings"
     steps:
+      - name: Install dependencies (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev
       - name: Checkout Actions Repository
         uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -43,6 +51,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Install dependencies (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
