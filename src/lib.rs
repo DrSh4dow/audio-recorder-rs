@@ -1,6 +1,6 @@
-//! # Recorder Core Library
+//! # audio-recorder-rs Library
 //!
-//! The `recorder-core` library provides functionality for recording audio using various configurations.
+//! The `audio-recorder-rs` library provides functionality for recording audio using various configurations.
 //! It supports recording from multiple devices, with or without resampling, and is designed to be used
 //! in a singleton pattern to ensure only one instance of the recorder is active at any time.
 //!

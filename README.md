@@ -1,4 +1,13 @@
-# Recorder Core
+# Rust System Audio & Mic audio Recorder (audio-recorder-rs)
+
+<!--toc:start-->
+- [Rust System Audio & Mic audio Recorder (audio-recorder-rs)](#rust-system-audio-mic-audio-recorder-audio-recorder-rs)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Usage](#usage)
+  - [API](#api)
+    - [`Recorder`](#recorder)
+<!--toc:end-->
 
 Core library for cross-OS system + input audio recording.
 
@@ -12,9 +21,7 @@ ensure only one instance of the recorder is active at any time.
 ## Features
 
 - Cross-platform support (Windows, macOS, Linux)
-- Record audio from multiple input devices
-- Resampling support
-- Singleton pattern to ensure only one active recorder instance
+- Auto Resampling
 - Background thread for non-blocking recording
 
 ## Usage
@@ -23,7 +30,7 @@ To use the recorder, create an instance of the `Recorder` struct and
 call its `start` method to begin recording. This will start a background
 thread that will record audio from the default input device. The `start`
 function will return a receiver which acts as a stream to receive the
-audio data in `TargetFormat`. Call the `stop` method to stop recording.
+audio data in `f32`. Call the `stop` method to stop recording.
 
 ```rust
 use audio_recorder_rs::Recorder;
