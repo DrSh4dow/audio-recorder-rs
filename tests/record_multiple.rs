@@ -44,7 +44,7 @@ fn record_multiple_devices() {
     let instant = std::time::Instant::now();
 
     while let Ok(d) = receiver.recv() {
-        if instant.elapsed().as_secs() > 2 {
+        if instant.elapsed().as_secs() > 8 {
             break;
         }
 
@@ -62,7 +62,7 @@ fn record_multiple_devices() {
     );
 
     // delete output.wav
-    if let Err(e) = std::fs::remove_file("output.wav") {
-        tracing::error!("Failed to delete output.wav: {}", e);
-    }
+    // if let Err(e) = std::fs::remove_file("output.wav") {
+    //     tracing::error!("Failed to delete output.wav: {}", e);
+    // }
 }
